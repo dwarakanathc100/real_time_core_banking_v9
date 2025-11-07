@@ -22,7 +22,7 @@ import (
 
 func main() {
 	logrus.SetFormatter(&logrus.TextFormatter{FullTimestamp: true})
-	logrus.Info("Starting real-time core banking app...")
+	logrus.Info("Starting real-time core banking app...for demo")
 
 	if err := godotenv.Load(); err != nil {
 		logrus.Warn("No .env file found — using system environment variables")
