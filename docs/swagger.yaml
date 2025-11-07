@@ -1,0 +1,332 @@
+openapi: 3.0.0
+info:
+  title: Real-time Core Banking API
+  description: >
+    A demo API for real-time core banking system with customer, account, and transaction management.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: Local server
+
+tags:
+  - name: Auth
+    description: Authentication and user registration
+  - name: Customer
+    description: Customer-related operations
+  - name: Account
+    description: Account-related operations
+  - name: Transaction
+    description: Transaction listing
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      description: Returns "ok" if the server is running
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: ok
+
+  /v1/register:
+    post:
+      tags: [Auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                email:
+                  type: string
+              required: [username, password]
+      responses:
+        '201':
+          description: User registered successfully
+        '400':
+          description: Invalid input
+
+  /v1/login:
+    post:
+      tags: [Auth]
+      summary: Login and receive JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+              required: [username, password]
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        '401':
+          description: Unauthorized
+
+  /v1/customers:
+    post:
+      tags: [Customer]
+      summary: Create customer
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                first_name:
+                  type: string
+                last_name:
+                  type: string
+                email:
+                  type: string
+                mobile:
+                  type: string
+              required: [first_name, last_name, email, mobile]
+      responses:
+        '201':
+          description: Customer created successfully
+        '401':
+          description: Unauthorized
+
+  /v1/customers/list:
+    get:
+      tags: [Customer]
+      summary: List all customers
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of customers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    first_name:
+                      type: string
+                    last_name:
+                      type: string
+                    email:
+                      type: string
+                    mobile:
+                      type: string
+        '401':
+          description: Unauthorized
+
+  /v1/accounts:
+    post:
+      tags: [Account]
+      summary: Create new account
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                customer_id:
+                  type: integer
+                account_number:
+                  type: string
+                balance:
+                  type: number
+                  format: float
+              required: [customer_id, account_number]
+      responses:
+        '201':
+          description: Account created successfully
+        '401':
+          description: Unauthorized
+
+  /v1/accounts/balance:
+    get:
+      tags: [Account]
+      summary: Get account balance
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: account_number
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Account balance details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  account_number:
+                    type: string
+                  balance:
+                    type: number
+                    format: float
+        '401':
+          description: Unauthorized
+        '404':
+          description: Account not found
+
+  /v1/accounts/deposit:
+    post:
+      tags: [Account]
+      summary: Deposit amount into an account
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                account_number:
+                  type: string
+                amount:
+                  type: number
+                  format: float
+              required: [account_number, amount]
+      responses:
+        '200':
+          description: Deposit successful
+        '400':
+          description: Invalid request
+        '401':
+          description: Unauthorized
+
+  /v1/accounts/withdraw:
+    post:
+      tags: [Account]
+      summary: Withdraw amount from an account
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                account_number:
+                  type: string
+                amount:
+                  type: number
+                  format: float
+              required: [account_number, amount]
+      responses:
+        '200':
+          description: Withdraw successful
+        '400':
+          description: Invalid request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Insufficient balance
+
+  /v1/accounts/transfer:
+    post:
+      tags: [Account]
+      summary: Transfer money between accounts
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                from_account:
+                  type: string
+                to_account:
+                  type: string
+                amount:
+                  type: number
+                  format: float
+              required: [from_account, to_account, amount]
+      responses:
+        '200':
+          description: Transfer successful
+        '400':
+          description: Invalid request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Insufficient funds
+
+  /v1/transactions/list:
+    get:
+      tags: [Transaction]
+      summary: List all transactions
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: account_number
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of transactions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    from_account:
+                      type: string
+                    to_account:
+                      type: string
+                    amount:
+                      type: number
+                      format: float
+                    created_at:
+                      type: string
+                      format: date-time
+        '401':
+          description: Unauthorized
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

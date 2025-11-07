@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: rtcb
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+
+  app:
+    image: dwarak1262/real_time_core_banking
+    depends_on:
+      - db
+      - redis
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/rtcb?sslmode=disable
+      - REDIS_ADDR=redis:6379
+      - JWT_SECRET=verysecretjwtkey
+      - PORT=8080
+    ports:
+      - "8080:8080"
+
+volumes:
+  db-data:
